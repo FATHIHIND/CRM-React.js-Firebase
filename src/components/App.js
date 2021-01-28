@@ -1,26 +1,40 @@
 import React, { Component } from 'react';
 import './App.css';
-import firebase from 'firebase';
-import data from '../data.json';
+import firebase from '../firebase';
 import Grid from './Grid';
 import Form from './Form';
 
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = { data };
+    this.state = { 
+      contacts: []
+     };
   }
 
-  componentWillMount() {
-    firebase.initializeApp({
-      apiKey: "AIzaSyAUHXRGhEq3uuisZ8XGaqqtprGB-ZPvaWQ",
-      authDomain: "crm-react-cb47d.firebaseapp.com",
-      projectId: "crm-react-cb47d",
-      storageBucket: "crm-react-cb47d.appspot.com",
-      messagingSenderId: "228934931151",
-      appId: "1:228934931151:web:bcf5518b9cd22431d99dba",
-      measurementId: "G-3GSQ6391QV"
+updateData() {
+  const db = firebase.firestore();
+  const settings = {timestampsInSnapshots: true};
+  db.settings(settings);
+
+  db.collection('contacts').get()
+    .then((snapshot) => {
+      let contacts = [];
+      snapshot.forEach((doc) => {
+        let contact = Object.assign({id: doc.id }, doc.data());
+        contacts.push(contact);
+      });
+      this.setState({
+        contacts: contacts
+      });
     })
+    .catch((err) => {
+      console.log('Erreur!', err);
+    });
+  }  
+
+  componentWillMount() {
+    this.updateData();
   }
 
   render() {
@@ -35,7 +49,7 @@ class App extends Component {
         </div>
         <div>
           <Form />
-          <Grid items={this.state.data}/>
+          <Grid items={this.state.contacts}/>
         </div>
       </div>
     );
